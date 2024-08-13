@@ -112,10 +112,12 @@ class FeedForwardBlock(nn.Module):
         self.d_model = d_model
         self.d_ff = d_ff
         self.dropout = nn.Dropout(dropout)
-        self.linear1 = nn.Linear(d_model, d_ff)
+        self.linear1 = nn.Linear(d_model, d_ff) # W
         self.linear2 = nn.Linear(d_ff, d_model)
         
     def forward(self, x):
+        # (batch, seq_len, d_model) -> (batch, seq_len, d_ff) -> (batch, seq_len, d_model)
         return self.linear2(self.dropout(torch.relu(self.linear1(x))))
 
-class
+class MultiHeadAttention(nn.Module):
+    
