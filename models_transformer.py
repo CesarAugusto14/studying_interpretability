@@ -119,5 +119,28 @@ class FeedForwardBlock(nn.Module):
         # (batch, seq_len, d_model) -> (batch, seq_len, d_ff) -> (batch, seq_len, d_model)
         return self.linear2(self.dropout(torch.relu(self.linear1(x))))
 
-class MultiHeadAttention(nn.Module):
-    
+class MultiHeadAttentionBlock(nn.Module):
+    def __init__(self,
+                 d_model : int,
+                 h : int, 
+                 dropout : float) -> None:
+        super(MultiHeadAttentionBlock, self).__init__()
+        
+        # Initialize:
+        self.d_model = d_model
+        self.h = h
+        self.dropout = nn.Dropout(dropout)
+        assert d_model % h == 0, "d_model must be divisible by h"
+        self.d_k = d_model // h  # This way, we have d_k to be an integer
+        
+        # weight matrics:
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model)
+        
+    def forward(self, q, k, v, mask=None):
+        
+        query = self.W_q(q) # (batch, seq_len, d_model) -> (batch, seq_len, d_model)
+        key = self.W_k(k)   # (batch, seq_len, d_model) -> (batch, seq_len, d_model)
+        value = self.W_v(v) # (batch, seq_len, d_model) -> (batch, seq_len, d_model)
