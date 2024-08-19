@@ -299,7 +299,7 @@ class ResidualConnection(nn.Module):
         x + dropout(MA(x)) or x + dropout(FF(x))
         """
         return x + self.dropout(sublayer(self.layer_norm(x)))
-    
+
 
 class EncoderBlock(nn.Module):
     """
@@ -316,12 +316,12 @@ class EncoderBlock(nn.Module):
         self.self_attention_block = self_attention_block
         self.feed_forward_block = feed_forward_block
         self.residual_connection = nn.ModuleList([ResidualConnection(self_attention_block.d_model, dropout) for _ in range(2)])
-        
+
     def forward(self, x, src_mask):
         x = self.residual_connection[0](x, lambda x: self.self_attention_block(x, x, x, src_mask))
         x = self.residual_connection[1](x, self.feed_forward_block)
         return x
-    
+
 class Encoder(nn.Module):
     """ 
     Class to call a list of encoder blocks and normalize the output using
@@ -334,7 +334,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.layers = layers
         self.norm = LayerNormalization(d_model)
-        
+
     def forward(self, x, mask):
         """Simple forward method to apply the encoder blocks to the input."""
         for layer in self.layers:
@@ -355,7 +355,7 @@ class DecoderBlock(nn.Module):
         self.cross_attention_block = cross_attention_block
         self.feed_forward_block = feed_forward_block
         self.residual_connection = nn.ModuleList([ResidualConnection(self_attention_block.d_model, dropout) for _ in range(3)])
-        
+
     def forward(self, x, encoder_output, src_mask, tgt_mask):
         """
         Simple forward method to apply the decoder blocks to the input.
@@ -364,25 +364,25 @@ class DecoderBlock(nn.Module):
         x = self.residual_connection[1](x, lambda x: self.cross_attention_block(x, encoder_output, encoder_output, src_mask))
         x = self.residual_connection[2](x, self.feed_forward_block)
         return x
-    
+
 class Decoder(nn.Module):
+    """
+    Class to call a list of decoder blocks and normalize the output using
+    the LayerNormalization class.
+    """
+    def __init__(self, layers : nn.ModuleList, d_model : int) -> None:
+        super(Decoder, self).__init__()
+        self.layers = layers
+        self.norm = LayerNormalization(d_model)
+
+    def forward(self, x, encoder_output, src_mask, tgt_mask):
         """
-        Class to call a list of decoder blocks and normalize the output using
-        the LayerNormalization class.
+        Simple forward method to apply the decoder blocks to the input.
         """
-        def __init__(self, layers : nn.ModuleList, d_model : int) -> None:
-            super(Decoder, self).__init__()
-            self.layers = layers
-            self.norm = LayerNormalization(d_model)
-            
-        def forward(self, x, encoder_output, src_mask, tgt_mask):
-            """
-            Simple forward method to apply the decoder blocks to the input.
-            """
-            for layer in self.layers:
-                x = layer(x, encoder_output, src_mask, tgt_mask)
-            return self.norm(x)
-        
+        for layer in self.layers:
+            x = layer(x, encoder_output, src_mask, tgt_mask)
+        return self.norm(x)
+
 class ProjectionLayer(nn.Module):
     def __init__(self, d_model : int, vocab_size : int):
         super(ProjectionLayer, self).__init__()
@@ -396,8 +396,6 @@ class ProjectionLayer(nn.Module):
 class Transformer(nn.Module):
     """
     Class that wraps the other class for a complete Transformer model.
-    
-    
     """
     def __init__(self,
                  encoder : Encoder,
@@ -447,7 +445,7 @@ def build_transformer(src_vocab_size : int,
                       h : int = 8,
                       dropout : float = 0.1,
                       d_ff : int = 2048):
-    # Create the embedding layers: 
+    # Create the embedding layers:
     src_embed = InputEmbeddings(d_model = d_model, vocab_size = src_vocab_size)
     tgt_embed = InputEmbeddings(d_model = d_model, vocab_size = tgt_vocab_size)
 
@@ -514,7 +512,7 @@ def build_transformer(src_vocab_size : int,
                         src_pos = src_pos,
                         tgt_pos = tgt_pos,
                         projection = projection)
-    
+
     # Initialize the parameters:
     for p in model.parameters():
         if p.dim() > 1:
