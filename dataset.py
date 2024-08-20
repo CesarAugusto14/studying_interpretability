@@ -35,7 +35,13 @@ class BilingualDataset(Dataset):
         if enc_num_padding_tokens < 0 or dec_num_padding_tokens < 0:
             raise ValueError("Sequence length too short")
         
-        encoder_input = torch.cat([self.sos_token,
-                                   torch.tensor(src_tokens, dtype=torch.int64),
-                                   self.eos_token,
-                                   self.pad_token.repeat(enc_num_padding_tokens)])
+        encoder_input = torch.cat(
+            [self.sos_token,
+            torch.tensor(src_tokens, dtype=torch.int64),
+            self.eos_token,
+            self.pad_token.repeat(enc_num_padding_tokens)
+            ]
+            )
+        
+        decoder_input = torch.cat(
+            
